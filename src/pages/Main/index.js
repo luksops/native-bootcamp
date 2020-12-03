@@ -1,6 +1,19 @@
 import React, {Component} from 'react';
-import {Keyboard} from 'react-native';
-import {Container, Input, SubmitButton, Form} from './styles';
+import AsyncStorage from '@react-native-community/async-storage'
+import {Keyboard, ActivityIndicator} from 'react-native';
+import {
+  Container,
+  Input,
+  SubmitButton,
+  Form,
+  List,
+  User,
+  Avatar,
+  Name,
+  Bio,
+  ProfileButton,
+  ProfileButtonText,
+} from './styles';
 import api from '../../services/api';
 
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -11,10 +24,27 @@ class Main extends Component {
   state = {
     newUser: '',
     users: [],
+    loading: false,
   };
 
+  async componentDidMount() {
+    const users = await AsyncStorage.getItem('users')
+
+    if(users){
+      this.setState({ users: JSON.parse(users)})
+    }
+  }
+
+  componentDidUpdate(_, prevState) {
+    const { users } = this.state
+
+    if(users !== prevState.users){
+      AsyncStorage.setItem('users', JSON.stringify(users))
+    }
+  }
+
   handleAddUser = async () => {
-    console.tron.log(this.state);
+    this.setState({loading: true});
     const {newUser, users} = this.state;
 
     const response = await api.get(`/users/${newUser}`);
@@ -29,13 +59,14 @@ class Main extends Component {
     this.setState({
       users: [...users, data],
       newUser: '',
+      loading: false,
     });
 
     Keyboard.dismiss();
   };
 
   render() {
-    const {newUser, user} = this.state;
+    const {newUser, users, loading} = this.state;
     return (
       <Container>
         <Form>
@@ -48,10 +79,30 @@ class Main extends Component {
             returnKeyType="send"
             onSubmitEditing={this.handleAddUser}
           />
-          <SubmitButton onPress={this.handleAddUser}>
-            <Icon name="add" size={20} color="#fff" />
+          <SubmitButton loading={loading} onPress={this.handleAddUser}>
+            {loading ? (
+              <ActivityIndicator color='#fff' />
+            ) : (
+              <Icon name="add" size={20} color="#fff" />
+            )}
           </SubmitButton>
         </Form>
+
+        <List
+          data={users}
+          keyExtractor={(user) => user.login}
+          renderItem={({item}) => (
+            <User>
+              <Avatar source={{uri: item.avatar}} />
+              <Name>{item.name}</Name>
+              <Bio> {item.bio} </Bio>
+
+              <ProfileButton onPress={() => {}}>
+                <ProfileButtonText> Profile </ProfileButtonText>
+              </ProfileButton>
+            </User>
+          )}
+        />
       </Container>
     );
   }
