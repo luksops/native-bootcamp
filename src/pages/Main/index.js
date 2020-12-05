@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import AsyncStorage from '@react-native-community/async-storage'
+import PropTypes from 'prop-types';
+import AsyncStorage from '@react-native-community/async-storage';
 import {Keyboard, ActivityIndicator} from 'react-native';
 import {
   Container,
@@ -21,6 +22,16 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 // import { Container } from './styles';
 
 class Main extends Component {
+  static navigationOptions = {
+    title: 'Users',
+  };
+
+  static propTypes = {
+    navigation: PropTypes.shape({
+      navigate: PropTypes.func,
+    }).isRequired,
+  };
+
   state = {
     newUser: '',
     users: [],
@@ -28,18 +39,18 @@ class Main extends Component {
   };
 
   async componentDidMount() {
-    const users = await AsyncStorage.getItem('users')
+    const users = await AsyncStorage.getItem('users');
 
-    if(users){
-      this.setState({ users: JSON.parse(users)})
+    if (users) {
+      this.setState({users: JSON.parse(users)});
     }
   }
 
   componentDidUpdate(_, prevState) {
-    const { users } = this.state
+    const {users} = this.state;
 
-    if(users !== prevState.users){
-      AsyncStorage.setItem('users', JSON.stringify(users))
+    if (users !== prevState.users) {
+      AsyncStorage.setItem('users', JSON.stringify(users));
     }
   }
 
@@ -65,6 +76,12 @@ class Main extends Component {
     Keyboard.dismiss();
   };
 
+  handleNavigate = (user) => {
+    const {navigation} = this.props;
+
+    navigation.navigate('User', {user});
+  };
+
   render() {
     const {newUser, users, loading} = this.state;
     return (
@@ -81,7 +98,7 @@ class Main extends Component {
           />
           <SubmitButton loading={loading} onPress={this.handleAddUser}>
             {loading ? (
-              <ActivityIndicator color='#fff' />
+              <ActivityIndicator color="#fff" />
             ) : (
               <Icon name="add" size={20} color="#fff" />
             )}
@@ -97,7 +114,10 @@ class Main extends Component {
               <Name>{item.name}</Name>
               <Bio> {item.bio} </Bio>
 
-              <ProfileButton onPress={() => {}}>
+              <ProfileButton
+                onPress={() => {
+                  this.handleNavigate(item);
+                }}>
                 <ProfileButtonText> Profile </ProfileButtonText>
               </ProfileButton>
             </User>
@@ -107,9 +127,5 @@ class Main extends Component {
     );
   }
 }
-
-Main.navigationOptions = {
-  title: 'Main',
-};
 
 export default Main;
