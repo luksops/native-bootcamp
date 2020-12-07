@@ -13,6 +13,7 @@ import {
   Title,
   Author,
 } from './styles';
+import {Pressable} from 'react-native';
 import api from '../../services/api';
 import {ActivityIndicator} from 'react-native';
 
@@ -62,11 +63,14 @@ class User extends Component {
   };
 
   handleRefresh = () => {
-    this.setState({
-      refreshing: true,
-      page: 1,
-      star: [],
-    }, this.loadFirstPage);
+    this.setState(
+      {
+        refreshing: true,
+        page: 1,
+        star: [],
+      },
+      this.loadFirstPage,
+    );
   };
 
   handleEndReached = async () => {
@@ -85,6 +89,12 @@ class User extends Component {
       star: [...star, ...response.data],
       loadingNewPages: false,
     });
+  };
+
+  handleNavigate = (repository) => {
+    const {navigation} = this.props;
+
+    navigation.navigate('WebViewPage', {repository});
   };
 
   render() {
@@ -114,13 +124,15 @@ class User extends Component {
             data={star}
             keyExtractor={(star) => String(star.id)}
             renderItem={({item}) => (
-              <Starred>
-                <OwnerAvatar source={{uri: item.owner.avatar_url}} />
-                <Info>
-                  <Title> {item.name} </Title>
-                  <Author> {item.owner.login} </Author>
-                </Info>
-              </Starred>
+              <Pressable onPress={() => this.handleNavigate(item)}>
+                <Starred>
+                  <OwnerAvatar source={{uri: item.owner.avatar_url}} />
+                  <Info>
+                    <Title> {item.name} </Title>
+                    <Author> {item.owner.login} </Author>
+                  </Info>
+                </Starred>
+              </Pressable>
             )}
           />
         )}
